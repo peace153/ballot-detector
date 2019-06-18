@@ -3,9 +3,8 @@ import numpy as np
 
 import os
 os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;udp"
-
 #vcap = cv2.VideoCapture("rtsp://192.168.1.2:5554/camera", cv2.CAP_FFMPEG)
-vcap = cv2.VideoCapture("rtsp://10.59.56.248:5554/camera", cv2.CAP_FFMPEG)
+vcap = cv2.VideoCapture("rtsp://192.168.1.124:5554/camera", cv2.CAP_FFMPEG)
 while(1):
     ret, frame = vcap.read()
     if ret == False:
