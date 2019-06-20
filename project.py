@@ -24,21 +24,20 @@ partys = {  1: {'name': 'X01', 'score': 0 },
             14: {'name': 'X14', 'score': 0 },
             15: {'name': 'X15', 'score': 0 },
             16: {'name': 'X16', 'score': 0 },
-            17: {'name': 'X17', 'score': 0 },
-            18: {'name': 'X18', 'score': 0 },
-            19: {'name': 'X19', 'score': 0 },
-            20: {'name': 'X30', 'score': 0 },
-            21: {'name': 'X21', 'score': 0 },
-            22: {'name': 'X22', 'score': 0 },
-            23: {'name': 'X23', 'score': 0 },
-            24: {'name': 'X24', 'score': 0 },
-            25: {'name': 'X25', 'score': 0 },
-            26: {'name': 'X26', 'score': 0 },
-            27: {'name': 'X27', 'score': 0 },
-            28: {'name': 'X28', 'score': 0 },
-            29: {'name': 'X29', 'score': 0 },
-            30: {'name': 'X30', 'score': 0 },
-
+            17: {'name': 'X17', 'score': 1 },
+            18: {'name': 'X18', 'score': 1 },
+            19: {'name': 'X19', 'score': 1 },
+            20: {'name': 'X30', 'score': 1 },
+            21: {'name': 'X21', 'score': 1 },
+            22: {'name': 'X22', 'score': 1 },
+            23: {'name': 'X23', 'score': 1 },
+            24: {'name': 'X24', 'score': 1 },
+            25: {'name': 'X25', 'score': 1 },
+            26: {'name': 'X26', 'score': 1 },
+            27: {'name': 'X27', 'score': 1 },
+            28: {'name': 'X28', 'score': 1 },
+            29: {'name': 'X29', 'score': 1 },
+            30: {'name': 'X30', 'score': 1 },
             77: {'name': 'Total', 'score': 0 },
             88: {'name': 'Novote', 'score': 0 },
             99: {'name': 'Reject', 'score': 0 }}
@@ -77,16 +76,18 @@ icon03 = Image.open("YL.jpg")
 icon04 = Image.open("RL.jpg")
 
 ##--Set Frame Party name
-frName = Frame(GUI)
+frName = Frame(GUI,width=70)
 frName.place(x=830,y=50)
 
+frName2 = Frame(GUI,width=70)
+frName2.place(x=1055,y=50)
+
 ##--Set Frame Party Score
-frScore = Frame(GUI)
+frScore = Frame(GUI,width=100)
 frScore.place(x=900,y=50)
 
-##--Set Frame Graph
-frChart = Frame(GUI)
-frChart.place(x=10,y=500)
+frScore2 = Frame(GUI,width=100)
+frScore2.place(x=1125,y=50)
 
 ##--Set live Camera
 dim = (640, 480)
@@ -126,15 +127,22 @@ def showRes():
 def countScore(party_no):
     partys[77]['score'] = partys[77]['score'] + 1
     partys[party_no]['score'] = partys[party_no]['score'] + 1
-    c = Label(frScore,text=partys[party_no]['score'], font=('Angsana New',16),foreground='red')
+
+    frame = frScore
     rowid = party_no
+
+    if rowid > midpoint:
+        frame = frScore2
+        rowid = party_no-midpoint
+
+    c = Label(frame,text=partys[party_no]['score'], font=('Angsana New',16),foreground='red')
     if party_no == 88:
         party_no = 32
     elif party_no == 99:
         party_no = 33
-    c.grid(row=party_no,column=0)
-    c = Label(frScore,text=partys[77]['score'], font=('Angsana New',16),foreground='red')
-    c.grid(row=31,column=0)
+    c.grid(row=rowid,column=0)
+    c = Label(frScore2,text=partys[77]['score'], font=('Angsana New',16),foreground='red')
+    c.grid(row=31-midpoint,column=0)
 
 tmp = 0
 def order_points(pts):
@@ -317,12 +325,21 @@ def show_frame():
 ##-- Set Barchart 
     # barChart()
 rows = 0
+midpoint = int(len(partys)/2)
+
 for party_id,score in partys.items():
     rows = rows + 1
-    b = Label(frName,text=score['name'], font=('Angsana New',16),foreground='blue')
-    b.grid(row=rows,column=0)
-    c = Label(frScore,text=score['score'], font=('Angsana New',16),foreground='red')
-    c.grid(row=rows,column=0)
+    nFrame = frName
+    sFrame = frScore
+    target = rows
+    if rows > midpoint:
+        nFrame = frName2
+        sFrame = frScore2
+        target = rows - midpoint
+    b = Label(nFrame,text=score['name'], font=('Angsana New',16),foreground='blue')
+    b.grid(row=target,column=0)
+    c = Label(sFrame,text=score['score'], font=('Angsana New',16),foreground='red')
+    c.grid(row=target,column=0)
 
 ##-- Display
 show_frame()
