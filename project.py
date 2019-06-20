@@ -15,7 +15,7 @@ partys = {  1: {'name': 'X01', 'score': 0 },
             5: {'name': 'X05', 'score': 0 },
             6: {'name': 'X06', 'score': 0 },
             7: {'name': 'X07', 'score': 0 },
-            8: {'name': 'X08', 'score': 0 },
+            8: {'name': 'X08', 'score': 0 },     
             9: {'name': 'X09', 'score': 0 },
             10: {'name': 'X10', 'score': 0 },
             11: {'name': 'X11', 'score': 0 },
@@ -59,7 +59,7 @@ imageFrame = Frame(GUI, width=640, height=480)
 imageFrame.place(x=10,y=10)
 
 resFrame = Frame(GUI, width=400, height=200)
-resFrame.place(x=10,y=500)
+resFrame.place(x=680,y=120)
 lres = Label(resFrame)
 lres.grid(row=0, column=0)
 
@@ -116,7 +116,9 @@ def setIcon(icon_no = 1):
     licon_TL.configure(image=TL_load)
 
 def showRes():
+    dim = (400,200)
     pic = Image.open("croped_img.png")
+    pic =cv2.resize(resFrame,dim,interpolation = cv2.INTER_AREA)
     resFrame = ImageTk.PhotoImage(image=pic)
     lres.resFrame = resFrame
     lres.configure(image=resFrame)
@@ -280,7 +282,7 @@ def show_frame():
 
     # Add Traffic Icon
     # Set Default icon_num :1
-    icon_num = 2
+    icon_num = 1
     setIcon(icon_num)
 
     # # Display Score
@@ -325,5 +327,4 @@ for party_id,score in partys.items():
 ##-- Display
 show_frame()
 print("show_frame")
-##-- Set Barchart 
 GUI.mainloop()
