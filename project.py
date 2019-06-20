@@ -117,10 +117,18 @@ def setIcon(icon_no = 1):
     licon_TL.configure(image=TL_load)
 
 def showRes():
-    dim = (400,200)
-    pic = Image.open("croped_img.png")
-    pic =cv2.resize(resFrame,dim,interpolation = cv2.INTER_AREA)
-    resFrame = ImageTk.PhotoImage(image=pic)
+    global resFrame
+    dim = (200,400)
+    # pic = Image.open("croped_img.png")
+
+    frame = cv2.imread("croped_img.png")
+
+    frame =cv2.resize(frame,dim,interpolation = cv2.INTER_AREA)
+    cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+    img = Image.fromarray(cv2image)
+    imgtk = ImageTk.PhotoImage(image=img)
+
+    resFrame = ImageTk.PhotoImage(image=img)
     lres.resFrame = resFrame
     lres.configure(image=resFrame)
 
@@ -299,7 +307,6 @@ def show_frame():
         print(ok)
        
         if ok:
-            print(res.shape)
             print(res)
             print("##############################################################")
             must_detect = False
@@ -315,10 +322,11 @@ def show_frame():
         if not ok:
             state = 0
             must_detect = True
+            count=0
             print("on")
         else:
             count = count+1
-            if count>100:
+            if count>50:
                 must_detect = True
             print("off")
 
