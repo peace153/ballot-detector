@@ -8,19 +8,40 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import time
 import threading
 
-partys = { 1: {'name': 'XX1', 'score': 0 },
-           2: {'name': 'XX2', 'score': 0 },
-           3: {'name': 'XX3', 'score': 0 },
-           4: {'name': 'XX4', 'score': 0 },
-           5: {'name': 'XX5', 'score': 0 },
-           6: {'name': 'XX6', 'score': 0 },
-           7: {'name': 'XX7', 'score': 0 },
-           8: {'name': 'XX8', 'score': 0 },
-           9: {'name': 'XX9', 'score': 0 },
-          10: {'name': 'XX10', 'score': 0 },
-          77: {'name': 'Total', 'score': 0 },#Total
-          88: {'name': 'Novote', 'score': 0 },#No vote
-          99: {'name': 'Reject', 'score': 0 }}#Reject
+partys = {  1: {'name': 'X01', 'score': 0 },
+            2: {'name': 'X02', 'score': 0 },
+            3: {'name': 'X03', 'score': 0 },
+            4: {'name': 'X04', 'score': 0 },
+            5: {'name': 'X05', 'score': 0 },
+            6: {'name': 'X06', 'score': 0 },
+            7: {'name': 'X07', 'score': 0 },
+            8: {'name': 'X08', 'score': 0 },
+            9: {'name': 'X09', 'score': 0 },
+            10: {'name': 'X10', 'score': 0 },
+            11: {'name': 'X11', 'score': 0 },
+            12: {'name': 'X12', 'score': 0 },
+            13: {'name': 'X13', 'score': 0 },
+            14: {'name': 'X14', 'score': 0 },
+            15: {'name': 'X15', 'score': 0 },
+            16: {'name': 'X16', 'score': 0 },
+            17: {'name': 'X17', 'score': 0 },
+            18: {'name': 'X18', 'score': 0 },
+            19: {'name': 'X19', 'score': 0 },
+            20: {'name': 'X30', 'score': 0 },
+            21: {'name': 'X21', 'score': 0 },
+            22: {'name': 'X22', 'score': 0 },
+            23: {'name': 'X23', 'score': 0 },
+            24: {'name': 'X24', 'score': 0 },
+            25: {'name': 'X25', 'score': 0 },
+            26: {'name': 'X26', 'score': 0 },
+            27: {'name': 'X27', 'score': 0 },
+            28: {'name': 'X28', 'score': 0 },
+            29: {'name': 'X29', 'score': 0 },
+            30: {'name': 'X30', 'score': 0 },
+
+            77: {'name': 'Total', 'score': 0 },
+            88: {'name': 'Novote', 'score': 0 },
+            99: {'name': 'Reject', 'score': 0 }}
 
 ####---- GUI
 
@@ -36,6 +57,11 @@ SetLabel.place(x=830,y=15)
 # -----
 imageFrame = Frame(GUI, width=640, height=480)
 imageFrame.place(x=10,y=10)
+
+resFrame = Frame(GUI, width=400, height=200)
+resFrame.place(x=10,y=500)
+lres = Label(resFrame)
+lres.grid(row=0, column=0)
 
 ##Set Traffic Icon
 # -----
@@ -89,6 +115,11 @@ def setIcon(icon_no = 1):
     licon_TL.TL_load = TL_load
     licon_TL.configure(image=TL_load)
 
+def showRes():
+    pic = Image.open("croped_img.png")
+    resFrame = ImageTk.PhotoImage(image=pic)
+    lres.resFrame = resFrame
+    lres.configure(image=resFrame)
 
 def countScore(party_no):
     partys[77]['score'] = partys[77]['score'] + 1
@@ -96,12 +127,12 @@ def countScore(party_no):
     c = Label(frScore,text=partys[party_no]['score'], font=('Angsana New',16),foreground='red')
     rowid = party_no
     if party_no == 88:
-        party_no = 12
+        party_no = 32
     elif party_no == 99:
-        party_no = 13
+        party_no = 33
     c.grid(row=party_no,column=0)
     c = Label(frScore,text=partys[77]['score'], font=('Angsana New',16),foreground='red')
-    c.grid(row=11,column=0)
+    c.grid(row=31,column=0)
 
 tmp = 0
 def order_points(pts):
@@ -152,11 +183,11 @@ search_params = dict(checks=50)
 flann = cv2.FlannBasedMatcher(index_params,search_params)
 
 def detect_card(cam_bgr):
-    print(cam_bgr.shape)
     cam_gray = cv2.cvtColor( cam_bgr, cv2.COLOR_BGR2GRAY )
     # Find sets of keypoints and descriptors
     (cam_kps,cam_descs) = detector.detectAndCompute( cam_gray, None )
-
+    if cam_descs is None:
+        return None,False
     print('Input image: keypoints = ' + str( len(cam_kps) ) + ' , descriptors = ' + str(cam_descs.shape) )
 
     # Find the matches for each descriptor in 'template_descs'
@@ -168,11 +199,11 @@ def detect_card(cam_bgr):
     for i, mn in enumerate(matches):
         if ( len(mn) == 2 ):                # prevent the case when only one match is found
             m = mn[0]  ;   n = mn[1]        # 'm' is the best match, 'n' is the second-best match
-            if m.distance < 0.7 * n.distance: 
+            if m.distance < 0.6 * n.distance: 
             # if m.distance < 0.6 * n.distance:   
                 goodMatches.append( m )
 
-    MIN_MATCH_COUNT = 50
+    MIN_MATCH_COUNT = 10
     homoResult = cam_bgr.copy()
     print(len(goodMatches))
     if len ( goodMatches ) < MIN_MATCH_COUNT:
@@ -208,14 +239,14 @@ def detect_card(cam_bgr):
             area = w * h
             print(x, y, w, h)
             print('area:', area)
-            if area < 30000 or x > 0 or y > 0:
+            if area < 3000 or x < 0 or y < 0:
                 print("image out of bound")
                 return None,False
             else:
                 pts = np.array(dst_pts.reshape(4,2), dtype = "float32")
                 warped = four_point_transform(hmcp, pts)
-                cv2.imshow('warped', warped)
-                # cv2.imwrite('croped_img.png', warped)
+                # cv2.imshow('warped', warped)
+                cv2.imwrite('croped_img.png', warped)
     return warped,True
 
 
@@ -230,10 +261,14 @@ def detect_x():
 
 state = 0
 
+must_detect = True
+count = 0
 def show_frame():
-    global state
+    global state,must_detect,count
     _, frame = cap.read()
-    res,ok = detect_card(frame)
+    ok = True
+    if must_detect:
+        res,ok = detect_card(frame)
     # frame = cv2.flip(frame, 1)
     frame =cv2.resize(frame,dim,interpolation = cv2.INTER_AREA)
     cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
@@ -252,8 +287,13 @@ def show_frame():
     if state == 0:
         
         print(ok)
-        print(res)
+       
         if ok:
+            print(res.shape)
+            print(res)
+            print("##############################################################")
+            must_detect = False
+            showRes()
             party = detect_x()
             countScore(party)
             state = 1
@@ -262,10 +302,14 @@ def show_frame():
         else:
             print("on")
     elif state == 1:
-        if not detect_card():
+        if not ok:
             state = 0
+            must_detect = True
             print("on")
         else:
+            count = count+1
+            if count>100:
+                must_detect = True
             print("off")
 
 ##-- Set Barchart 
