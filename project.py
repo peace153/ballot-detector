@@ -58,14 +58,14 @@ imageFrame = Frame(GUI, width=640, height=480)
 imageFrame.place(x=10,y=10)
 
 resFrame = Frame(GUI, width=400, height=200)
-resFrame.place(x=680,y=120)
+resFrame.place(x=660,y=170)
 lres = Label(resFrame)
 lres.grid(row=0, column=0)
 
 ##Set Traffic Icon
 # -----
 iconFrame = Frame(GUI, width=100, height=100)
-iconFrame.place(x=680,y=50)
+iconFrame.place(x=685,y=50)
 licon_TL = Label(iconFrame)
 licon_TL.grid(row=0,column=0)
 
@@ -118,7 +118,7 @@ def setIcon(icon_no = 1):
 
 def showRes():
     global resFrame
-    dim = (200,400)
+    dim = (150,250)
     # pic = Image.open("croped_img.png")
 
     frame = cv2.imread("croped_img.png")
@@ -147,6 +147,7 @@ def countScore(party_no):
     if party_no == 88:
         party_no = 32
     elif party_no == 99:
+        setIcon(4)
         party_no = 33
     c.grid(row=rowid,column=0)
     c = Label(frScore2,text=partys[77]['score'], font=('Angsana New',16),foreground='red')
@@ -307,6 +308,7 @@ def show_frame():
         print(ok)
        
         if ok:
+            setIcon(2)
             print(res)
             print("##############################################################")
             must_detect = False
@@ -317,14 +319,17 @@ def show_frame():
             print(partys)
             print("off")
         else:
+            setIcon(1)
             print("on")
     elif state == 1:
         if not ok:
+            # setIcon(2)
             state = 0
             must_detect = True
             count=0
             print("on")
         else:
+            setIcon(2)
             count = count+1
             if count>50:
                 must_detect = True
