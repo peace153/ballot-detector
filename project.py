@@ -264,10 +264,10 @@ def detect_card(cam_bgr):
             else:
                 pts = np.array(dst_pts.reshape(4,2), dtype = "float32")
                 warped = four_point_transform(hmcp, pts)
+                resized_img = cv2.resize(warped, (480, 640))
                 # cv2.imshow('warped', warped)
-                cv2.imwrite('croped_img.png', warped)
+                cv2.imwrite('croped_img.png', resized_img)
     return warped,True
-
 
 def detect_x():
     global tmp
