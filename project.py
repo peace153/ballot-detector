@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import time
 import threading
+import math
 
 partys = {  1: {'name': 'X01', 'score': 0 },
             2: {'name': 'X02', 'score': 0 },
@@ -24,20 +25,20 @@ partys = {  1: {'name': 'X01', 'score': 0 },
             14: {'name': 'X14', 'score': 0 },
             15: {'name': 'X15', 'score': 0 },
             16: {'name': 'X16', 'score': 0 },
-            17: {'name': 'X17', 'score': 1 },
-            18: {'name': 'X18', 'score': 1 },
-            19: {'name': 'X19', 'score': 1 },
-            20: {'name': 'X30', 'score': 1 },
-            21: {'name': 'X21', 'score': 1 },
-            22: {'name': 'X22', 'score': 1 },
-            23: {'name': 'X23', 'score': 1 },
-            24: {'name': 'X24', 'score': 1 },
-            25: {'name': 'X25', 'score': 1 },
-            26: {'name': 'X26', 'score': 1 },
-            27: {'name': 'X27', 'score': 1 },
-            28: {'name': 'X28', 'score': 1 },
-            29: {'name': 'X29', 'score': 1 },
-            30: {'name': 'X30', 'score': 1 },
+            17: {'name': 'X17', 'score': 0 },
+            18: {'name': 'X18', 'score': 0 },
+            19: {'name': 'X19', 'score': 0 },
+            20: {'name': 'X30', 'score': 0 },
+            21: {'name': 'X21', 'score': 0 },
+            22: {'name': 'X22', 'score': 0 },
+            23: {'name': 'X23', 'score': 0 },
+            24: {'name': 'X24', 'score': 0 },
+            25: {'name': 'X25', 'score': 0 },
+            26: {'name': 'X26', 'score': 0 },
+            27: {'name': 'X27', 'score': 0 },
+            28: {'name': 'X28', 'score': 0 },
+            29: {'name': 'X29', 'score': 0 },
+            30: {'name': 'X30', 'score': 0 },
             77: {'name': 'Total', 'score': 0 },
             88: {'name': 'Novote', 'score': 0 },
             99: {'name': 'Reject', 'score': 0 }}
@@ -119,7 +120,6 @@ def setIcon(icon_no = 1):
 def showRes():
     global resFrame
     dim = (150,250)
-    # pic = Image.open("croped_img.png")
 
     frame = cv2.imread("croped_img.png")
 
@@ -132,7 +132,7 @@ def showRes():
     lres.resFrame = resFrame
     lres.configure(image=resFrame)
 
-def countScore(party_no):
+def countScore(party_no=99):
     partys[77]['score'] = partys[77]['score'] + 1
     partys[party_no]['score'] = partys[party_no]['score'] + 1
 
@@ -141,19 +141,21 @@ def countScore(party_no):
 
     if rowid > midpoint:
         frame = frScore2
-        rowid = party_no-midpoint
-
-    c = Label(frame,text=partys[party_no]['score'], font=('Angsana New',16),foreground='red')
-    if party_no == 88:
-        party_no = 32
-    elif party_no == 99:
-        setIcon(4)
-        party_no = 33
+        temp = party_no
+        if party_no == 88:
+            temp = 32
+        elif party_no == 99:
+            setIcon(4)
+            temp = 33
+        rowid = temp-midpoint
+    # update score of party_no
+    c = Label(frame,text=partys[party_no]['score'], font=('Angsana New',16),foreground='red') 
     c.grid(row=rowid,column=0)
+
+    # update score of total
     c = Label(frScore2,text=partys[77]['score'], font=('Angsana New',16),foreground='red')
     c.grid(row=31-midpoint,column=0)
 
-tmp = 0
 def order_points(pts):
 	rect = np.zeros((4, 2), dtype = "float32")
 	s = pts.sum(axis = 1)
@@ -183,7 +185,7 @@ def four_point_transform(image, pts):
 	warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
 	return warped
 
-template_bgr = cv2.imread('card_border_black.jpg')
+template_bgr = cv2.imread('card_border_black_2.png')
 template_gray = cv2.cvtColor( template_bgr, cv2.COLOR_BGR2GRAY )
 h,w = template_gray.shape[:2]
 
@@ -202,6 +204,8 @@ search_params = dict(checks=50)
 flann = cv2.FlannBasedMatcher(index_params,search_params)
 
 def detect_card(cam_bgr):
+    output = None
+    found = False
     cam_gray = cv2.cvtColor( cam_bgr, cv2.COLOR_BGR2GRAY )
     # Find sets of keypoints and descriptors
     (cam_kps,cam_descs) = detector.detectAndCompute( cam_gray, None )
@@ -254,43 +258,384 @@ def detect_card(cam_bgr):
                                         2, cv2.LINE_AA )         # line thickness , line's type
             rect = cv2.boundingRect(dst_pts)
             x, y, w, h = rect
-            croped = homoResult[y:y+h, x:x+w].copy()
             area = w * h
             print(x, y, w, h)
             print('area:', area)
-            if area < 3000 or x < 0 or y < 0:
+            if area < 30000 or x < 0 or y < 0:
                 print("image out of bound")
-                return None,False
             else:
+                found = True
                 pts = np.array(dst_pts.reshape(4,2), dtype = "float32")
                 warped = four_point_transform(hmcp, pts)
-                resized_img = cv2.resize(warped, (480, 640))
-                # cv2.imshow('warped', warped)
-                cv2.imwrite('croped_img.png', resized_img)
-    return warped,True
+                output = cv2.resize(warped, (480, 640))
+                cv2.imwrite('croped_img.png', output)
+    return output, found
 
-def detect_x():
-    global tmp
-    res = tmp%12
-    if res == 0:
-        res = 88
-    elif res == 11:
-        res == 99
-    return res
+def dist(coor):
+    return math.sqrt((coor[0][0] - coor[0][2])**2 + (coor[0][1] - coor[0][3])**2)
+
+def angle(l):
+    x1, y1, x2, y2 = l
+    return math.degrees(math.atan((x1-x2)/(y1-y2)))
+
+def detect_x(frame):
+    global card_pass, card_number
+    points = []
+    try:
+        hough_lineP = frame.copy()
+        output_img = frame.copy()
+
+        # sharpen image
+        k = 7
+        kernel = np.zeros( (k,k), np.float32 ) 
+        kernel.itemset( (k//2,k//2) , 2 ) 
+        kernel -= np.ones( (k,k) , np.float32 ) / (k*k) 
+
+        sharpen_img = cv2.filter2D(frame, -1, kernel) 
+        sharpen_img_gray = cv2.cvtColor(sharpen_img, cv2.COLOR_RGB2GRAY)
+
+        # Canny edge detection
+        thresh1 = 100
+        thresh2 = 255
+        canny = cv2.Canny (sharpen_img_gray, thresh1, thresh2)
+
+        # Eilminate table lines
+        k = 3
+        hk = int(k/2)
+        lineh = np.zeros((k,k), dtype = np.uint8)
+        lineh[hk,...] = 1
+        horizontal = cv2.morphologyEx(canny, cv2.MORPH_OPEN, lineh, iterations=2)
+        mor_open = canny-horizontal
+
+        linev = np.zeros((k,k),dtype = np.uint8)
+        linev[...,hk] = 1 
+        vertical = cv2.morphologyEx(mor_open, cv2.MORPH_OPEN, linev, iterations=2)
+        mor_open_ver = mor_open-vertical
+
+        # left column
+        top_margin_l  = 145
+        bottom_margin_l  = 600
+        front_margin_l  = 192
+        back_margin_l  = 232
+
+        # right Column
+        top_margin_r  = 145
+        bottom_margin_r = 600
+        front_margin_r = 412
+        back_margin_r = 452
+
+        list_lines = []
+        column_coordinates = [(top_margin_l, bottom_margin_l, front_margin_l, back_margin_l),
+                                (top_margin_r, bottom_margin_r, front_margin_r, back_margin_r)]
+        y_found, yh_found, x_found, xw_found = (0, 0, 0, 0)
+        for y, yh, x, xw in column_coordinates:
+            crop_img = mor_open_ver[y:yh, x:xw].copy()
+
+            # Preprocess Mark edge
+            kernel = np.ones((3,3), np.uint8)
+            img_dilation = cv2.dilate(crop_img, kernel, iterations=2) # max white
+            img_erosion = cv2.erode(img_dilation, kernel, iterations=3) # black
+
+            # Find stright line from edge detected
+            linesP = cv2.HoughLinesP( img_erosion,                 # 1-channel 8-bit binary input image
+                                    rho=1,                          # distance resolution of the accumulator in pixels
+                                    theta=np.pi/180,                # angle resolution of the accumulator in radians
+                                    threshold=10,                   # accumulator threshold, only lines with enough votes (>threshold) will be returned 
+                                    lines=None,                     # output vector of lines #lines=np.array([])
+                                    minLineLength = 10,             # minimum line length, line segments shorter than this will be rejected
+                                    maxLineGap = 5)                 # maximum gap allowed between points on the same line to link them
+            
+            if linesP is not None:
+                y_found, yh_found, x_found, xw_found = (y, yh, x, xw)
+                for i in range(len(linesP)):
+                    list_lines.append(linesP[i])
+                
+        coordinates = []
+        if list_lines is not None:
+            list_lines = sorted(list_lines, key = dist, reverse = True)
+            # Find lines with angle difference more than 65 degree and collect line coordinate
+            diff_ang = 50
+            for i in range(len(list_lines)-1):
+                l = list_lines[i+1][0]
+                angleL = angle(l)
+                sameInCoor = False
+                for j in range(len(coordinates)):
+                    c = coordinates[j]
+                    angleC = angle(c)
+                    # check = (0 < angleC <2 ) or (minAngle < angleC < maxAngle) or (-maxAngle < angleC < -minAngle)
+                    if (abs(angleL - angleC) < diff_ang):
+                        sameInCoor = True
+                        break
+                if not sameInCoor:
+                    coordinates.append(l)     
+            print(coordinates)
+
+        coor_x = []
+        number_x = 0
+        x_cal1 = 0
+        x_cal2 = 0
+        if coordinates is not None:
+            for i in range(len(coordinates)-1):
+                c1 = coordinates[i] 
+                x1, y1, x2, y2 = c1
+                m = (y1 - y2) / (x1 - x2)
+                b = y2 - m*x2
+
+                for j in range(i,len(coordinates)):
+                    c2 = coordinates[j]
+                    x3, y3, x4, y4 = c2
+                    
+                    y_cal1 = m*x3 + b
+                    y_cal2 = m*x4 + b
+
+                    mj = (y3 - y4) / (x3 - x4)
+                    bj = y3 - mj*x3
+                    check = (m != 0) and (mj != 0) 
+                    
+                    if (m != 0) and (mj != 0):
+                        x_cal1 = (y1 - bj) / mj
+                        x_cal2 = (y2 - bj) / mj
+                        
+                    checkx1 = (y3 > y_cal1) & (y4 < y_cal2) #& ((x3 > x_cal1) or (x4 < x_cal2))
+                    checkx2 = (y3 < y_cal1) & (y4 > y_cal2) #& ((x3 < x_cal1) or (x4 > x_cal2))
+                        
+                    if checkx1:
+                        number_x += 1
+                        coor_x.append(c1)
+                        coor_x.append(c2)
+                    elif checkx2:
+                        number_x += 1
+                        coor_x.append(c1)
+                        coor_x.append(c2)
+
+        if number_x == 1:
+            for coor in coor_x:
+                x1, y1, x2, y2 = tuple(coor)
+                points.append((x1 + x_found, y1 + y_found))
+                points.append((x2 + x_found, y2 + y_found))
+                cv2.line(output_img[y_found:yh_found, x_found:xw_found], (x1, y1), (x2, y2), (0,255,0), 1, cv2.LINE_8)
+
+            print("Card number: ", card_number)
+            print("Found X :", number_x, "ea")
+            print("Result : Card is good")
+            print("Coordinate X mark:", points)
+            card_number += 1
+            card_pass += 1               
+            print(sharpen_img_gray.shape)
+            print("--" * 20)
+        else:
+            print("Card number: ", card_number)
+            print("Found X :", number_x, "ea")
+            print("Result : Card is not good")
+            card_number += 1               
+            print("--" * 20)
+    except:
+        print("Card number: ", card_number)
+        print("Result***: ERROR FOUND")   
+    print("Print OUT")
+    # score = card_pass/card_number*100
+    # print("% Passed :", score)
+    # print("% Fail :", 100 - score)
+    return points
+
+def find_party_number(input_x):
+    try:
+        # If image size has changed, adjust only these 2 parameters.
+        w = 480 # Card width
+        h = 640 # Card height
+        step_x = 228
+        step_y = 26
+        
+        # Add variant 0.5%
+        firstBox1_x = 188 * 0.95
+        firstBox2_x = 234 * 1.05
+        firstBox3_x = 188 * 0.95
+        firstBox4_x = 234 + 1.05
+        
+        firstBox1_y = 136 - 0.95
+        firstBox2_y = 136 - 0.95
+        firstBox3_y = 162 + 1.05
+        firstBox4_y = 162 + 1.05
+
+        novote_box1_x = 416 * 0.95
+        novote_box2_x = 460 * 1.05
+        novote_box3_x = 416 * 0.95
+        novote_box4_x = 460 * 1.05
+        
+        novote_box1_y = 550 * 0.95
+        novote_box2_y = 550 * 0.95
+        novote_box3_y = 582 * 1.05
+        novote_box4_y = 582 * 1.05
+
+        x = []
+        y = []
+        
+        for i in range(len(input_x)):
+            x.append(input_x[i][0])
+            y.append(input_x[i][1])
+        
+        if(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+           y[0] >= firstBox1_y and y[1] >= firstBox2_y and y[2] < firstBox3_y and y[3] < firstBox4_y):
+            return 1
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(1*step_y)) and y[1] >= (firstBox2_y+(1*step_y)) and 
+             y[2] < (firstBox3_y+(1*step_y)) and y[3] < (firstBox4_y+(1*step_y))):
+            return 2
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(2*step_y)) and y[1] >= (firstBox2_y+(2*step_y)) and 
+             y[2] < (firstBox3_y+(2*step_y)) and y[3] < (firstBox4_y+(2*step_y))):
+            return 3
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(3*step_y)) and y[1] >= (firstBox2_y+(3*step_y)) and 
+             y[2] < (firstBox3_y+(3*step_y)) and y[3] < (firstBox4_y+(3*step_y))):
+            return 4
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(4*step_y)) and y[1] >= (firstBox2_y+(4*step_y)) and 
+             y[2] < (firstBox3_y+(4*step_y)) and y[3] < (firstBox4_y+(4*step_y))):
+            return 5
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(5*step_y)) and y[1] >= (firstBox2_y+(5*step_y)) and 
+             y[2] < (firstBox3_y+(5*step_y)) and y[3] < (firstBox4_y+(5*step_y))):
+            return 6
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(6*step_y)) and y[1] >= (firstBox2_y+(6*step_y)) and 
+             y[2] < (firstBox3_y+(6*step_y)) and y[3] < (firstBox4_y+(6*step_y))):
+            return 7
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(7*step_y)) and y[1] >= (firstBox2_y+(7*step_y)) and 
+             y[2] < (firstBox3_y+(7*step_y)) and y[3] < (firstBox4_y+(7*step_y))):
+            return 8
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(8*step_y)) and y[1] >= (firstBox2_y+(8*step_y)) and 
+             y[2] < (firstBox3_y+(8*step_y)) and y[3] < (firstBox4_y+(8*step_y))):
+            return 9
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(9*step_y)) and y[1] >= (firstBox2_y+(9*step_y)) and 
+             y[2] < (firstBox3_y+(9*step_y)) and y[3] < (firstBox4_y+(9*step_y))):
+            return 10
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(10*step_y)) and y[1] >= (firstBox2_y+(10*step_y)) and 
+             y[2] < (firstBox3_y+(10*step_y)) and y[3] < (firstBox4_y+(10*step_y))):
+            return 11
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(11*step_y)) and y[1] >= (firstBox2_y+(11*step_y)) and 
+             y[2] < (firstBox3_y+(11*step_y)) and y[3] < (firstBox4_y+(11*step_y))):
+            return 12
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(12*step_y)) and y[1] >= (firstBox2_y+(12*step_y)) and 
+             y[2] < (firstBox3_y+(12*step_y)) and y[3] < (firstBox4_y+(12*step_y))):
+            return 13
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(13*step_y)) and y[1] >= (firstBox2_y+(13*step_y)) and 
+             y[2] < (firstBox3_y+(13*step_y)) and y[3] < (firstBox4_y+(13*step_y))):
+            return 14
+        elif(x[0] >= firstBox1_x and x[1] < firstBox2_x and x[2] >= firstBox3_x and x[3] < firstBox4_x and 
+             y[0] >= (firstBox1_y+(14*step_y)) and y[1] >= (firstBox2_y+(14*step_y)) and 
+             y[2] < (firstBox3_y+(14*step_y)) and y[3] < (firstBox4_y+(14*step_y))):
+            return 15
+        
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= firstBox1_y and y[1] >= firstBox2_y and y[2] < firstBox3_y and y[3] < firstBox4_y):
+            return 16
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(1*step_y)) and y[1] >= (firstBox2_y+(1*step_y)) and 
+             y[2] < (firstBox3_y+(1*step_y)) and y[3] < (firstBox4_y+(1*step_y))):
+            return 17
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(2*step_y)) and y[1] >= (firstBox2_y+(2*step_y)) and 
+             y[2] < (firstBox3_y+(2*step_y)) and y[3] < (firstBox4_y+(2*step_y))):
+            return 18
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(3*step_y)) and y[1] >= (firstBox2_y+(3*step_y)) and 
+             y[2] < (firstBox3_y+(3*step_y)) and y[3] < (firstBox4_y+(3*step_y))):
+            return 19
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(4*step_y)) and y[1] >= (firstBox2_y+(4*step_y)) and 
+             y[2] < (firstBox3_y+(4*step_y)) and y[3] < (firstBox4_y+(4*step_y))):
+            return 20
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(5*step_y)) and y[1] >= (firstBox2_y+(5*step_y)) and 
+             y[2] < (firstBox3_y+(5*step_y)) and y[3] < (firstBox4_y+(5*step_y))):
+            return 21
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(6*step_y)) and y[1] >= (firstBox2_y+(6*step_y)) and 
+             y[2] < (firstBox3_y+(6*step_y)) and y[3] < (firstBox4_y+(6*step_y))):
+            return 22
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(7*step_y)) and y[1] >= (firstBox2_y+(7*step_y)) and 
+             y[2] < (firstBox3_y+(7*step_y)) and y[3] < (firstBox4_y+(7*step_y))):
+            return 23
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(8*step_y)) and y[1] >= (firstBox2_y+(8*step_y)) and 
+             y[2] < (firstBox3_y+(8*step_y)) and y[3] < (firstBox4_y+(8*step_y))):
+            return 24
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(9*step_y)) and y[1] >= (firstBox2_y+(9*step_y)) and 
+             y[2] < (firstBox3_y+(9*step_y)) and y[3] < (firstBox4_y+(9*step_y))):
+            return 25
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(10*step_y)) and y[1] >= (firstBox2_y+(10*step_y)) and 
+             y[2] < (firstBox3_y+(10*step_y)) and y[3] < (firstBox4_y+(10*step_y))):
+            return 26
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(11*step_y)) and y[1] >= (firstBox2_y+(11*step_y)) and 
+             y[2] < (firstBox3_y+(11*step_y)) and y[3] < (firstBox4_y+(11*step_y))):
+            return 27
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(12*step_y)) and y[1] >= (firstBox2_y+(12*step_y)) and 
+             y[2] < (firstBox3_y+(12*step_y)) and y[3] < (firstBox4_y+(12*step_y))):
+            return 28
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(13*step_y)) and y[1] >= (firstBox2_y+(13*step_y)) and 
+             y[2] < (firstBox3_y+(13*step_y)) and y[3] < (firstBox4_y+(13*step_y))):
+            return 29
+        elif(x[0] >= (firstBox1_x+step_x) and x[1] < (firstBox2_x+step_x) and 
+             x[2] >= (firstBox3_x+step_x) and x[3] < (firstBox4_x+step_x) and 
+             y[0] >= (firstBox1_y+(14*step_y)) and y[1] >= (firstBox2_y+(14*step_y)) and 
+             y[2] < (firstBox3_y+(14*step_y)) and y[3] < (firstBox4_y+(14*step_y))):
+            return 30
+        elif(x[0] >= novote_box1_x and x[1] < novote_box2_x and 
+             x[2] >= novote_box3_x and x[3] < novote_box4_x and 
+             y[0] >= novote_box1_y and y[1] >= novote_box2_y and 
+             y[2] < novote_box3_y and y[3] < novote_box4_y):
+             return 88
+        else:
+            return 99 # Bad card
+    except:
+         print("Error in findPartyNumber()")
+    return 99 # Bad card
 
 state = 0
 
 must_detect = True
 count = 0
+card_pass = 0
+card_number = 0
 def show_frame():
-    global state,must_detect,count
+    global state, must_detect, count, card_pass, card_number
     _, frame = cap.read()
+
+    res = None
     ok = True
     if must_detect:
-        res,ok = detect_card(frame)
+        res, ok = detect_card(frame)
     # frame = cv2.flip(frame, 1)
-    frame =cv2.resize(frame,dim,interpolation = cv2.INTER_AREA)
-    cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGBA)
+    resized_frame = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
+    cv2image = cv2.cvtColor(resized_frame, cv2.COLOR_BGR2RGBA)
     img = Image.fromarray(cv2image)
     imgtk = ImageTk.PhotoImage(image=img)
     lmain.imgtk = imgtk
@@ -304,17 +649,21 @@ def show_frame():
 
     # # Display Score
     if state == 0:
-        
         print(ok)
-       
         if ok:
             setIcon(2)
             print(res)
             print("##############################################################")
             must_detect = False
             showRes()
-            party = detect_x()
-            countScore(party)
+            points = detect_x(res)
+            if points:
+                party_number = find_party_number(points)
+                print("##############################################################", points)
+                print("##############################################################", party_number)
+                countScore(party_number)
+            else:
+                countScore()
             state = 1
             print(partys)
             print("off")
