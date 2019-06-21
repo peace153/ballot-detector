@@ -471,7 +471,6 @@ def find_party_number(input_x):
         novote_box2_y = 550 * 0.95
         novote_box3_y = 582 * 1.05
         novote_box4_y = 582 * 1.05
->>>>>>> detect_x
 
         x = []
         y = []
