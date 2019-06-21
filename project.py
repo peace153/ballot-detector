@@ -187,20 +187,20 @@ def four_point_transform(image, pts):
 	warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
 	return warped
 
-template_bgr = cv2.imread('card_border_black.jpg')
+template_bgr = cv2.imread('card_border_black_2.png')
 template_gray = cv2.cvtColor( template_bgr, cv2.COLOR_BGR2GRAY )
 h,w = template_gray.shape[:2]
 
-# detector = cv2.xfeatures2d.SIFT_create()
-detector = cv2.ORB_create()
+detector = cv2.xfeatures2d.SIFT_create()
+# detector = cv2.ORB_create()
 template_kps,template_descs = detector.detectAndCompute( template_gray, None )
 FLANN_INDEX_KDTREE = 0
 FLANN_INDEX_LSH = 6
-# index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-index_params = dict(algorithm = FLANN_INDEX_LSH,
-                        table_number = 6,       # 12
-                        key_size = 12,          # 20
-                        multi_probe_level = 1)  # 2
+index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+# index_params = dict(algorithm = FLANN_INDEX_LSH,
+#                         table_number = 6,       # 12
+#                         key_size = 12,          # 20
+#                         multi_probe_level = 1)  # 2
 search_params = dict(checks=50)
 # Initiate the matcher
 flann = cv2.FlannBasedMatcher(index_params,search_params)
@@ -262,14 +262,15 @@ def detect_card(cam_bgr):
             area = w * h
             print(x, y, w, h)
             print('area:', area)
-            if area < 3000 or x < 0 or y < 0:
+            if area < 30000 or x < 0 or y < 0:
                 print("image out of bound")
                 return None,False
             else:
                 pts = np.array(dst_pts.reshape(4,2), dtype = "float32")
                 warped = four_point_transform(hmcp, pts)
+                resized_img = cv2.resize(warped, (480, 640))
                 # cv2.imshow('warped', warped)
-                cv2.imwrite('croped_img.png', warped)
+                cv2.imwrite('croped_img.png', resized_img)
     return warped,True
 
 
@@ -286,8 +287,9 @@ state = 0
 
 must_detect = True
 count = 0
+wait_crop = 0
 def show_frame():
-    global state,must_detect,count
+    global state,must_detect,count,wait_crop
     _, frame = image_hub.recv_image()
     image_hub.send_reply(b'OK')
 
@@ -314,20 +316,24 @@ def show_frame():
         print(ok)
        
         if ok:
+            wait_crop += 1
             setIcon(2)
             print(res)
-            print("##############################################################")
-            must_detect = False
-            showRes()
-            party = detect_x()
-            countScore(party)
-            state = 1
-            print(partys)
-            print("off")
+            print("##############################################################", wait_crop)
+            if wait_crop == 5:
+                must_detect = False
+                showRes()
+                party = detect_x()
+                countScore(party)
+                state = 1
+                print(partys)
+                print("off")
         else:
+            wait_crop = 0
             setIcon(1)
             print("on")
     elif state == 1:
+        wait_crop = 0
         if not ok:
             # setIcon(2)
             state = 0
