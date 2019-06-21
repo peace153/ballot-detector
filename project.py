@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import time
 import threading
+import sys
+
+sys.path.insert(0, 'imagezmq/imagezmq')  # imagezmq.py is in ../imagezmq
+import imagezmq
 
 partys = {  1: {'name': 'X01', 'score': 0 },
             2: {'name': 'X02', 'score': 0 },
@@ -95,7 +99,7 @@ dim = (640, 480)
 lmain = Label(imageFrame)
 lmain.grid(row=0, column=0)
 
-cap = cv2.VideoCapture(0)
+image_hub = imagezmq.ImageHub()
 
 # import os
 # os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;udp"
@@ -284,7 +288,9 @@ must_detect = True
 count = 0
 def show_frame():
     global state,must_detect,count
-    _, frame = cap.read()
+    _, frame = image_hub.recv_image()
+    image_hub.send_reply(b'OK')
+
     ok = True
     if must_detect:
         res,ok = detect_card(frame)
