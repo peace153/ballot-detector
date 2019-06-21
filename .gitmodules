@@ -1,0 +1,3 @@
+[submodule "imagezmq"]
+	path = imagezmq
+	url = https://github.com/jeffbass/imagezmq.git
