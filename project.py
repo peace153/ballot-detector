@@ -185,7 +185,7 @@ def four_point_transform(image, pts):
 	warped = cv2.warpPerspective(image, M, (maxWidth, maxHeight))
 	return warped
 
-template_bgr = cv2.imread('card_border_black_2.png')
+template_bgr = cv2.imread('card_border_black.png')
 template_gray = cv2.cvtColor( template_bgr, cv2.COLOR_BGR2GRAY )
 h,w = template_gray.shape[:2]
 
