@@ -189,16 +189,16 @@ template_bgr = cv2.imread('card_border_black_2.png')
 template_gray = cv2.cvtColor( template_bgr, cv2.COLOR_BGR2GRAY )
 h,w = template_gray.shape[:2]
 
-# detector = cv2.xfeatures2d.SIFT_create()
-detector = cv2.ORB_create()
+detector = cv2.xfeatures2d.SIFT_create()
+# detector = cv2.ORB_create()
 template_kps,template_descs = detector.detectAndCompute( template_gray, None )
 FLANN_INDEX_KDTREE = 0
 FLANN_INDEX_LSH = 6
-# index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
-index_params = dict(algorithm = FLANN_INDEX_LSH,
-                        table_number = 6,       # 12
-                        key_size = 12,          # 20
-                        multi_probe_level = 1)  # 2
+index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+# index_params = dict(algorithm = FLANN_INDEX_LSH,
+#                         table_number = 6,       # 12
+#                         key_size = 12,          # 20
+#                         multi_probe_level = 1)  # 2
 search_params = dict(checks=50)
 # Initiate the matcher
 flann = cv2.FlannBasedMatcher(index_params,search_params)
