@@ -455,12 +455,12 @@ def find_party_number(input_x):
         firstBox1_x = 188 * 0.95
         firstBox2_x = 234 * 1.05
         firstBox3_x = 188 * 0.95
-        firstBox4_x = 234 + 1.05
+        firstBox4_x = 234 * 1.05
         
-        firstBox1_y = 136 - 0.95
-        firstBox2_y = 136 - 0.95
-        firstBox3_y = 162 + 1.05
-        firstBox4_y = 162 + 1.05
+        firstBox1_y = 136 * 0.95
+        firstBox2_y = 136 * 0.95
+        firstBox3_y = 162 * 1.05
+        firstBox4_y = 162 * 1.05
 
         novote_box1_x = 416 * 0.95
         novote_box2_x = 460 * 1.05
